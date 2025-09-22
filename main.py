@@ -233,8 +233,8 @@ if __name__ == "__main__":
             muted_C = C
             loguru.logger.info(f"Color found: R={r*255}, G={g*255}, B={b*255}, L={L}, C={C}, H={H*360}")
 
-        if muted_C > best_triple[0][4] / 2:
-            muted_C = best_triple[0][4] / 2
+        if muted_C > best_triple[0][4] * (2 / 3):
+            muted_C = best_triple[0][4] * (2 / 3)
 
         new_secondary_colors = []
         new_hues_labels = []
@@ -257,10 +257,68 @@ if __name__ == "__main__":
         muted_complementary_color_sRGB = colour.convert(muted_complementary_color_LCHab, "CIE LCHab", "sRGB")
         loguru.logger.info(f"Muted complementary color: R={muted_complementary_color_sRGB[0]*255}, G={muted_complementary_color_sRGB[1]*255}, B={muted_complementary_color_sRGB[2]*255}, L={muted_complementary_color_LCHab[0]}, C={muted_complementary_color_LCHab[1]}, H={muted_complementary_color_LCHab[2]*360}")
 
+
+        # create even more muted version of best triple and secondary colors
+        even_more_muted_C = muted_C * 0.5
+        more_muted_colors = []
+        for color in best_triple_muted:
+            L, C, H = color[0], color[1], color[2]
+            color_even_more_muted = colour.convert([L, even_more_muted_C, H], "CIE LCHab", "sRGB")
+            more_muted_colors.append([L, even_more_muted_C, H] + list(color_even_more_muted))
+            loguru.logger.info(f"Even more muted color: R={color_even_more_muted[0]*255}, G={color_even_more_muted[1]*255}, B={color_even_more_muted[2]*255}, L={L}, C={even_more_muted_C}, H={H*360}")
+        for color in secondary_colors:
+            L, C, H = colour.convert(color, "sRGB", "CIE LCHab")
+            color_even_more_muted = colour.convert([L, even_more_muted_C, H], "CIE LCHab", "sRGB")
+            more_muted_colors.append([L, even_more_muted_C, H] + list(color_even_more_muted))
+            loguru.logger.info(f"Even more muted secondary color: R={color_even_more_muted[0]*255}, G={color_even_more_muted[1]*255}, B={color_even_more_muted[2]*255}, L={L}, C={even_more_muted_C}, H={H*360}")
+
+        even_more_muted_complementary_color_LCHab = complementary_color_LCHab.copy()
+        even_more_muted_complementary_color_LCHab[1] = even_more_muted_C
+        even_more_muted_complementary_color_sRGB = colour.convert(even_more_muted_complementary_color_LCHab, "CIE LCHab", "sRGB")
+        loguru.logger.info(f"Even more muted complementary color: R={even_more_muted_complementary_color_sRGB[0]*255}, G={even_more_muted_complementary_color_sRGB[1]*255}, B={even_more_muted_complementary_color_sRGB[2]*255}, L={even_more_muted_complementary_color_LCHab[0]}, C={even_more_muted_complementary_color_LCHab[1]}, H={even_more_muted_complementary_color_LCHab[2]*360}")
+
+        more_muted_colors.append([even_more_muted_complementary_color_LCHab[0], even_more_muted_C, even_more_muted_complementary_color_LCHab[2]] + list(even_more_muted_complementary_color_sRGB))
+
+        # create grey levels
+        L_levels = numpy.linspace(black_LCHab[0], white_LCHab[0], num=7)
+
+        light_black = black_LCHab.copy()
+        light_black[0] = L_levels[1]
+        light_black_sRGB = colour.convert(light_black, "CIE LCHab", "sRGB")
+        loguru.logger.info(f"Lighter black: R={light_black_sRGB[0]*255}, G={light_black_sRGB[1]*255}, B={light_black_sRGB[2]*255}, L={light_black[0]}, C={light_black[1]}, H={light_black[2]*360}")
+
+        lighter_black = black_LCHab.copy()
+        lighter_black[0] = L_levels[2]
+        lighter_black_sRGB = colour.convert(lighter_black, "CIE LCHab", "sRGB")
+        loguru.logger.info(f"Lighter black: R={lighter_black_sRGB[0]*255}, G={lighter_black_sRGB[1]*255}, B={lighter_black_sRGB[2]*255}, L={lighter_black[0]}, C={lighter_black[1]}, H={lighter_black[2]*360}")
+    
+        dark_white = white_LCHab.copy()
+        dark_white[0] = L_levels[5]
+        dark_white_sRGB = colour.convert(dark_white, "CIE LCHab", "sRGB")
+        loguru.logger.info(f"Dark white: R={dark_white_sRGB[0]*255}, G={dark_white_sRGB[1]*255}, B={dark_white_sRGB[2]*255}, L={dark_white[0]}, C={dark_white[1]}, H={dark_white[2]*360}")
+
+        darker_white = white_LCHab.copy()
+        darker_white[0] = L_levels[4]
+        darker_white_sRGB = colour.convert(darker_white, "CIE LCHab", "sRGB")
+        loguru.logger.info(f"Darker white: R={darker_white_sRGB[0]*255}, G={darker_white_sRGB[1]*255}, B={darker_white_sRGB[2]*255}, L={darker_white[0]}, C={darker_white[1]}, H={darker_white[2]*360}")
+
         # visualize the best triple and grey and white and black and brightest and darkest primary
         # show the secondary colors in a second row
         import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(4, 8, figsize=(24, 12))
+        fig, ax = plt.subplots(5, 8, figsize=(24, 12))
+        ax[0, 3].axis("off")
+        ax[0, 4].axis("off")
+        ax[0, 5].axis("off")
+        ax[0, 7].axis("off")
+        ax[1, 7].axis("off")
+        ax[2, 7].axis("off")
+        ax[3, 7].axis("off")
+        ax[4, 1].axis("off")
+        ax[4, 3].axis("off")
+        ax[4, 4].axis("off")
+        ax[4, 6].axis("off")
+
+
         for i, color in enumerate(best_triple):
             ax[0, i].imshow([[color[:3]]])
             ax[0, i].set_title(f"L={color[3]:.2f}\nC={color[4]:.2f}\nH={color[5]*360:.1f}")
@@ -269,30 +327,46 @@ if __name__ == "__main__":
             ax[1, i].imshow([[color[3:]]])
             ax[1, i].set_title(f"Muted\nL={color[0]:.2f}\nC={color[1]:.2f}\nH={color[2]*360:.1f}")
             ax[1, i].axis("off")
-        ax[2, 1].imshow([[grey_sRGB]])
-        ax[2, 1].set_title(f"Grey\nL={grey_LCHab[0]:.2f}\nC={grey_LCHab[1]:.2f}\nH={grey_LCHab[2]*360:.1f}")
-        ax[2, 1].axis("off")
-        ax[2, 0].imshow([[white_sRGB]])
-        ax[2, 0].set_title(f"White\nL={white_LCHab[0]:.2f}\nC={white_LCHab[1]:.2f}\nH={white_LCHab[2]*360:.1f}")
-        ax[2, 0].axis("off")
-        ax[2, 2].imshow([[black_sRGB]])
-        ax[2, 2].set_title(f"Black\nL={black_LCHab[0]:.2f}\nC={black_LCHab[1]:.2f}\nH={black_LCHab[2]*360:.1f}")
-        ax[2, 2].axis("off")
-        ax[3, 0].imshow([[brightest_primary]])
-        ax[3, 0].set_title(f"Brightest Primary\nL={brightest_primary_LCHab[0]:.2f}\nC={brightest_primary_LCHab[1]:.2f}\nH={brightest_primary_LCHab[2]*360:.1f}")
+        for i, color in enumerate(more_muted_colors):
+            ax[2, i].imshow([[color[3:]]])
+            ax[2, i].set_title(f"More Muted\nL={color[0]:.2f}\nC={color[1]:.2f}\nH={color[2]*360:.1f}")
+            ax[2, i].axis("off")
+        ax[3, 3].imshow([[grey_sRGB]])
+        ax[3, 3].set_title(f"Grey\nL={grey_LCHab[0]:.2f}\nC={grey_LCHab[1]:.2f}\nH={grey_LCHab[2]*360:.1f}")
+        ax[3, 3].axis("off")
+        ax[3, 0].imshow([[white_sRGB]])
+        ax[3, 0].set_title(f"White\nL={white_LCHab[0]:.2f}\nC={white_LCHab[1]:.2f}\nH={white_LCHab[2]*360:.1f}")
         ax[3, 0].axis("off")
-        ax[3, 2].imshow([[darkest_primary]])
-        ax[3, 2].set_title(f"Darkest Primary\nL={darkest_primary_LCHab[0]:.2f}\nC={darkest_primary_LCHab[1]:.2f}\nH={darkest_primary_LCHab[2]*360:.1f}")
+        ax[3, 1].imshow([[dark_white_sRGB]])
+        ax[3, 1].set_title(f"Dark White\nL={dark_white[0]:.2f}\nC={dark_white[1]:.2f}\nH={dark_white[2]*360:.1f}")
+        ax[3, 1].axis("off")
+        ax[3, 2].imshow([[darker_white_sRGB]])
+        ax[3, 2].set_title(f"Darker White\nL={darker_white[0]:.2f}\nC={darker_white[1]:.2f}\nH={darker_white[2]*360:.1f}")
         ax[3, 2].axis("off")
+        ax[3, 4].imshow([[lighter_black_sRGB]])
+        ax[3, 4].set_title(f"Lighter Black\nL={light_black[0]:.2f}\nC={light_black[1]:.2f}\nH={light_black[2]*360:.1f}")
+        ax[3, 4].axis("off")
+        ax[3, 5].imshow([[light_black_sRGB]])
+        ax[3, 5].set_title(f"Light Black\nL={light_black[0]:.2f}\nC={light_black[1]:.2f}\nH={light_black[2]*360:.1f}")
+        ax[3, 5].axis("off")
+        ax[3, 6].imshow([[black_sRGB]])
+        ax[3, 6].set_title(f"Black\nL={black_LCHab[0]:.2f}\nC={black_LCHab[1]:.2f}\nH={black_LCHab[2]*360:.1f}")
+        ax[3, 6].axis("off")
+        ax[4, 0].imshow([[brightest_primary]])
+        ax[4, 0].set_title(f"Brightest Primary\nL={brightest_primary_LCHab[0]:.2f}\nC={brightest_primary_LCHab[1]:.2f}\nH={brightest_primary_LCHab[2]*360:.1f}")
+        ax[4, 0].axis("off")
+        ax[4, 2].imshow([[darkest_primary]])
+        ax[4, 2].set_title(f"Darkest Primary\nL={darkest_primary_LCHab[0]:.2f}\nC={darkest_primary_LCHab[1]:.2f}\nH={darkest_primary_LCHab[2]*360:.1f}")
+        ax[4, 2].axis("off")
         ax[0, 6].imshow([[complementary_color_sRGB]])
         ax[0, 6].set_title(f"Complementary Color\nL={complementary_color_LCHab[0]:.2f}\nC={complementary_color_LCHab[1]:.2f}\nH={complementary_color_LCHab[2]*360:.1f}")
         ax[0, 6].axis("off")
-        ax[3, 5].imshow([[brightest_complementary_color_sRGB]])
-        ax[3, 5].set_title(f"Brightest Complementary\nL={brightest_complementary_color_LCHab[0]:.2f}\nC={brightest_complementary_color_LCHab[1]:.2f}\nH={brightest_complementary_color_LCHab[2]*360:.1f}")
-        ax[3, 5].axis("off")
-        ax[3, 7].imshow([[darkest_complementary_color_sRGB]])
-        ax[3, 7].set_title(f"Darkest Complementary\nL={darkest_complementary_color_LCHab[0]:.2f}\nC={darkest_complementary_color_LCHab[1]:.2f}\nH={darkest_complementary_color_LCHab[2]*360:.1f}")
-        ax[3, 7].axis("off")
+        ax[4, 5].imshow([[brightest_complementary_color_sRGB]])
+        ax[4, 5].set_title(f"Brightest Complementary\nL={brightest_complementary_color_LCHab[0]:.2f}\nC={brightest_complementary_color_LCHab[1]:.2f}\nH={brightest_complementary_color_LCHab[2]*360:.1f}")
+        ax[4, 5].axis("off")
+        ax[4, 7].imshow([[darkest_complementary_color_sRGB]])
+        ax[4, 7].set_title(f"Darkest Complementary\nL={darkest_complementary_color_LCHab[0]:.2f}\nC={darkest_complementary_color_LCHab[1]:.2f}\nH={darkest_complementary_color_LCHab[2]*360:.1f}")
+        ax[4, 7].axis("off")
         for i, color in enumerate(secondary_colors):
             ax[1, i + 3].imshow([[color]])
             ax[1, i + 3].set_title(f"Secondary Color\nL={hues_labels[i][0]:.2f}\nC={hues_labels[i][1]:.2f}\nH={hues_labels[i][2]*360:.1f}")
